@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Asistente Inteligente - Anti-Bullying{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <h1 style="text-align: center; color: #2c3e50;">Consulta al Experto IA</h1>
+    <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
+        Pregunta sobre protocolos, consejos de actuación o dudas legales.
+        <br>
+        <small>El sistema responderá basándose en la documentación oficial del centro.</small>
+    </p>
+
+    <div style="margin-bottom: 2rem; text-align: center;">
+        <span style="background: #eaffee; color: #27ae60; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600;">
+            Modo Automático: El sistema detectará tu rol al preguntar.
+        </span>
+    </div>
+
+    <div id="chat-history"
+        style="height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9;">
+        <div style="text-align: center; color: #aaa; margin-top: 150px;">
+            Haz tu primera pregunta...
+        </div>
+    </div>
+
+    <form id="chat-form" style="display: flex; gap: 1rem;">
+        <input type="text" id="query" placeholder="Escribe tu duda aquí..." required
+            style="flex: 1; padding: 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+        <button type="submit"
+            style="padding: 1rem 2rem; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+            Preguntar
+        </button>
+    </form>
+</div>
+
+<script>
+    const chatHistory = document.getElementById('chat-history');
+    // let currentRole = 'parents'; // Ya no se usa en cliente
+
+    function appendMessage(text, sender) {
+        const div = document.createElement('div');
+        div.style.marginBottom = '1rem';
+        div.style.padding = '1rem';
+        div.style.borderRadius = '8px';
+        div.style.maxWidth = '80%';
+
+        if (sender === 'user') {
+            div.style.background = '#e3f2fd';
+            div.style.color = '#0d47a1';
+            div.style.marginLeft = 'auto'; // A la derecha
+            div.innerHTML = '<strong>Tú:</strong> ' + text;
+        } else {
+            div.style.background = '#fff';
+            div.style.border = '1px solid #ddd';
+            div.style.marginRight = 'auto'; // A la izquierda
+            div.innerHTML = '<strong>IA:</strong> ' + text.replace(/\n/g, '<br>');
+        }
+
+        chatHistory.appendChild(div);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('query');
+        const query = input.value;
+        if (!query) return;
+
+        // Mostrar pregunta
+        appendMessage(query, 'user');
+        input.value = '';
+        input.disabled = true;
+
+        try {
+            // Mostrar "Escribiendo..."
+            const loadingDiv = document.createElement('div');
+            loadingDiv.innerText = 'Consultando documentación...';
+            loadingDiv.style.color = '#888';
+            loadingDiv.style.fontStyle = 'italic';
+            loadingDiv.style.padding = '0.5rem';
+            loadingDiv.id = 'loading-msg';
+            chatHistory.appendChild(loadingDiv);
+
+            const response = await fetch(`/advice/ask?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            // Quitar loading
+            document.getElementById('loading-msg').remove();
+
+            if (response.ok) {
+                appendMessage(data.response, 'ai');
+            } else {
+                appendMessage("Error: " + data.detail, 'ai');
+            }
+        } catch (error) {
+            document.getElementById('loading-msg')?.remove();
+            appendMessage("Error de conexión: " + error.message, 'ai');
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    });
+</script>
+{% endblock %}

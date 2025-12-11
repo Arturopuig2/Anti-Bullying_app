@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Caso{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+
+    <div style="margin-bottom: 2rem;">
+        <a href="/dashboard/teacher" style="color: #3498db; text-decoration: none;">&larr; Volver al Dashboard</a>
+    </div>
+
+    <header
+        style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem; border-left: 5px solid {{ '#e74c3c' if survey.risk_level.value in ['high', 'critical'] else '#2ecc71' }};">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <h1 style="margin: 0; color: #2c3e50;">Caso #{{ survey.id }}</h1>
+                <p style="color: #7f8c8d; margin-top: 0.5rem;">Alumno: <strong>{{ survey.student.internal_code
+                        }}</strong></p>
+                <p style="color: #95a5a6; font-size: 0.9rem;">Fecha: {{ survey.date_submitted.strftime('%d/%m/%Y %H:%M')
+                    }}</p>
+            </div>
+            <div style="text-align: right;">
+                <span
+                    style="font-size: 1.5rem; font-weight: bold; color: {{ '#e74c3c' if survey.risk_level.value in ['high', 'critical'] else '#27ae60' }};">
+                    Riesgo {{ survey.risk_level.value.upper() }}
+                </span>
+                <p style="margin: 0; color: #7f8c8d;">Score: {{ survey.calculated_risk_score }}/100</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.5rem;">Análisis de IA</h3>
+            <p style="color: #34495e; line-height: 1.6;">{{ survey.ai_summary }}</p>
+        </div>
+    </header>
+
+    <section style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h2 style="color: #2c3e50; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f0f2f5;">
+            Respuestas del Cuestionario</h2>
+
+        <div id="answers-container">
+            <!-- Las respuestas se renderizarán vía JS porque están en JSON -->
+            Cargando respuestas...
+        </div>
+    </section>
+
+    <script>
+        const rawAnswers = {{ survey.raw_answers | safe }};
+        const container = document.getElementById('answers-container');
+
+        // Mapeo simple de claves a textos legibles (Idealmente esto vendría del backend o config compartido)
+        const labels = {
+            "headache_stomach": "¿Dolores físicos antes del colegio?",
+            "mood_changes": "¿Cambios de humor al volver?",
+            "sleep_problems": "¿Problemas de sueño?",
+            "school_resistance": "¿Resistencia a ir al colegio?",
+            "damaged_items": "¿Material roto o perdido?",
+            "conflict_verbalized": "¿Ha verbalizado conflicto?",
+            "conflict_details": "Detalles del conflicto"
+        };
+
+        let html = '<dl style="display: grid; grid-template-columns: 1fr; gap: 1rem;">';
+
+        for (const [key, value] of Object.entries(rawAnswers)) {
+            const label = labels[key] || key;
+            html += `
+                <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <dt style="font-weight: 600; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 0.5rem;">${label}</dt>
+                    <dd style="margin: 0; color: #2c3e50; font-weight: 500;">${value}</dd>
+                </div>
+            `;
+        }
+        html += '</dl>';
+        container.innerHTML = html;
+    </script>
+</div>
+{% endblock %}

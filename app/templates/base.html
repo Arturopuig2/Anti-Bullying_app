@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Anti-Bullying App{% endblock %}</title>
+    <link href="{{ url_for('static', path='/css/styles.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div>
+            <!-- En una app real, mostraríamos Logout si está logueado -->
+            <a href="/auth/login" style="color: white; text-decoration: none; margin-right: 15px;">Iniciar Sesión</a>
+            <a href="/auth/register"
+                style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Registrarse</a>
+        </div>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2025 Proyecto Anti-Bullying</p>
+    </footer>
+</body>
+
+</html>

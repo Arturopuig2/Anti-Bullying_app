@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Panel del Profesor - Hub de Monitorización{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+
+    <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="color: #2c3e50; margin: 0;">Panel de Monitorización</h1>
+            <p style="color: #7f8c8d; margin-top: 0.5rem;">Vista general del estado emocional del aula</p>
+        </div>
+        <div>
+            <span style="background: #eef2f7; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500;">
+                Profesor: Demo User
+            </span>
+        </div>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Card 0: Código de Aula -->
+        <div
+            style="background: linear-gradient(135deg, #f39c12, #d35400); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0; font-size: 1rem; opacity: 0.9;">Código de Aula</h3>
+            <p style="margin: 0.5rem 0 0 0; font-size: 2rem; font-weight: bold; letter-spacing: 2px;">{{
+                teacher.teacher_code }}</p>
+            <small style="opacity: 0.8; font-size: 0.8rem;">Compártelo con los padres</small>
+        </div>
+
+        <!-- Card 1 -->
+        <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h3 style="margin: 0; font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase;">Total Alumnos</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0 0 0; color: #2c3e50;">{{ total_students }}
+            </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div
+            style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #e74c3c;">
+            <h3 style="margin: 0; font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase;">Alertas Activas</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0 0 0; color: #e74c3c;">{{ critical_count }}
+            </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div
+            style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #2ecc71;">
+            <h3 style="margin: 0; font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase;">Estado Saludable</h3>
+            <p style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0 0 0; color: #27ae60;">{{ healthy_percentage
+                }}%</p>
+        </div>
+    </div>
+
+    <!-- Sección de Alertas Críticas -->
+    {% if alerts %}
+    <section style="margin-bottom: 3rem;">
+        <h2
+            style="font-size: 1.4rem; color: #c0392b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            ⚠️ Requieren Atención Inmediata
+        </h2>
+        <div style="display: grid; gap: 1rem;">
+            {% for alert in alerts %}
+            <div
+                style="background: #fff5f5; border: 1px solid #feb2b2; padding: 1.5rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #c53030;">Alumno ID: {{ alert.student.internal_code }}</h4>
+                    <p style="margin: 0; color: #742a2a; font-size: 0.95rem;">
+                        <strong>Motivo:</strong> {{ alert.ai_summary }}
+                    </p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #9b2c2c;">
+                        Detectado: {{ alert.date_submitted.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                </div>
+                <a href="/dashboard/case/{{ alert.id }}"
+                    style="background: #c53030; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; text-decoration: none;">
+                    Ver Caso
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Actividad Reciente Tabla -->
+    <section>
+        <h2 style="font-size: 1.4rem; color: #2c3e50; margin-bottom: 1rem;">Actividad Reciente</h2>
+        <div style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Fecha</th>
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Alumno</th>
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Nivel Riesgo</th>
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Score</th>
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in activity %}
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 1rem;">{{ item.date_submitted.strftime('%d/%m %H:%M') }}</td>
+                        <td style="padding: 1rem; font-weight: 500;">{{ item.student.internal_code }}</td>
+                        <td style="padding: 1rem;">
+                            {% if item.risk_level.value == 'critical' %}
+                            <span
+                                style="background: #fed7d7; color: #c53030; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">CRÍTICO</span>
+                            {% elif item.risk_level.value == 'high' %}
+                            <span
+                                style="background: #feebc8; color: #dd6b20; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">ALTO</span>
+                            {% elif item.risk_level.value == 'medium' %}
+                            <span
+                                style="background: #fefcbf; color: #b7791f; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">MEDIO</span>
+                            {% else %}
+                            <span
+                                style="background: #c6f6d5; color: #2f855a; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">NORMAL</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem;">{{ item.calculated_risk_score }}</td>
+                        <td style="padding: 1rem;">
+                            <a href="/dashboard/case/{{ item.id }}"
+                                style="color: #3182ce; text-decoration: none;">Detalles &rarr;</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

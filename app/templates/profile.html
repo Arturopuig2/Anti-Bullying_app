@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Anti-Bullying App{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 600px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <h1 style="color: #2c3e50; text-align: center; margin-bottom: 2rem;">Mi Perfil</h1>
+
+    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
+        <div style="margin-bottom: 1rem;">
+            <label
+                style="display: block; font-size: 0.85rem; color: #7f8c8d; font-weight: 600; text-transform: uppercase;">Nombre</label>
+            <p style="font-size: 1.2rem; color: #2c3e50; margin: 0;">{{ user.full_name }}</p>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label
+                style="display: block; font-size: 0.85rem; color: #7f8c8d; font-weight: 600; text-transform: uppercase;">Email</label>
+            <p style="font-size: 1.1rem; color: #34495e; margin: 0;">{{ user.email }}</p>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label
+                style="display: block; font-size: 0.85rem; color: #7f8c8d; font-weight: 600; text-transform: uppercase;">Rol</label>
+            <span
+                style="background: #e3f2fd; color: #1565c0; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">
+                {{ user.role.value }}
+            </span>
+        </div>
+    </div>
+
+    {% if user.role.value == "teacher" or user.role.value == "school_admin" %}
+    <div style="margin-top: 2rem; border-top: 2px dashed #ddd; padding-top: 2rem;">
+        <h3 style="color: #d35400; text-align: center; margin-bottom: 1rem;">🎓 Tu Código de Aula</h3>
+        <p style="text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Comparte este código con los padres para que puedan asociar a sus hijos a tu clase.
+        </p>
+
+        <div
+            style="background: #fff3e0; border: 2px solid #ffcc80; border-radius: 8px; padding: 1.5rem; text-align: center; position: relative;">
+            <code
+                style="display: block; font-size: 2.5rem; letter-spacing: 4px; font-weight: bold; color: #e67e22; margin-bottom: 0.5rem;">
+                {{ user.teacher_code }}
+            </code>
+            <small style="color: #e67e22; font-weight: 600;">CÓDIGO ÚNICO</small>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 2rem; text-align: center;">
+        <a href="javascript:history.back()"
+            style="color: #95a5a6; text-decoration: none; margin-right: 1rem;">Volver</a>
+        <a href="/auth/logout" style="color: #e74c3c; text-decoration: none; font-weight: 600;">Cerrar Sesión</a>
+    </div>
+</div>
+{% endblock %}

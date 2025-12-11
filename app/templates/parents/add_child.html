@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir Hijo - Anti-Bullying App{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 500px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <h2 style="color: #2c3e50; margin-bottom: 1.5rem;">Registrar Nuevo Alumno</h2>
+
+    <form action="/parents/add_child" method="POST">
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Nombre (o Abreviatura)</label>
+            <input type="text" name="name" required
+                style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
+            <small style="color: #7f8c8d;">Usaremos esto para generar un código anónimo.</small>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Edad</label>
+            <input type="number" name="age" required min="10" max="18"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Curso / Clase (Opcional)</label>
+            <input type="text" name="grade" placeholder="Ej: 3ºA"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Código del Profesor
+                (Opcional)</label>
+            <input type="text" name="teacher_code" placeholder="Ej: PROF-1AB (Déjalo vacío si aún no lo tienes)"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; letter-spacing: 1px;">
+            <small style="color: #7f8c8d;">Si no lo tienes ahora, podrás añadirlo más tarde.</small>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <a href="/parents/dashboard"
+                style="flex: 1; text-align: center; padding: 0.8rem; background: #95a5a6; color: white; border: none; border-radius: 4px; text-decoration: none; font-weight: 600;">
+                &larr; Volver
+            </a>
+            <button type="submit"
+                style="flex: 2; padding: 0.8rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                Guardar Hijo
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
