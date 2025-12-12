@@ -73,7 +73,7 @@ def add_child_to_parent(
 
 @router.get("/add_child_form", response_class=HTMLResponse)
 def add_child_form(request: Request, current_user: User = Depends(get_current_user)):
-    return templates.TemplateResponse("parents/add_child.html", {"request": request})
+    return templates.TemplateResponse("parents/add_child.html", {"request": request, "user": current_user})
 
 @router.get("/edit_child_form", response_class=HTMLResponse)
 def edit_child_form_page(request: Request, student_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -82,7 +82,7 @@ def edit_child_form_page(request: Request, student_id: int, current_user: User =
     if not student or student not in current_user.children:
          raise HTTPException(status_code=404, detail="Student not found or unauthorized")
          
-    return templates.TemplateResponse("parents/edit_child.html", {"request": request, "student": student})
+    return templates.TemplateResponse("parents/edit_child.html", {"request": request, "user": current_user, "student": student})
 
 @router.post("/edit_child")
 def edit_child_action(
@@ -109,7 +109,7 @@ def edit_child_action(
         teacher = db.query(User).filter(User.teacher_code == teacher_code).first()
         if not teacher:
              return templates.TemplateResponse("parents/edit_child.html", {
-                 "request": {}, "student": student, "error": "Código de profesor inválido"
+                 "request": {}, "user": current_user, "student": student, "error": "Código de profesor inválido"
              })
         
         student.teacher_id = teacher.id

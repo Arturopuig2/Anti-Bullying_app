@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa de Centros - Anti-Bullying App{% endblock %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<div style="padding: 2rem; max-width: 1400px; margin: 0 auto;">
+    <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="color: #2c3e50; margin: 0;">Mapa de Centros Educativos</h1>
+            <p style="color: #7f8c8d; margin-top: 0.5rem;">Visualización geoespacial de la red de colegios.</p>
+        </div>
+        <a href="/dashboard/teacher"
+            style="background: #95a5a6; color: white; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 500;">
+            &larr; Volver al Panel
+        </a>
+    </header>
+
+    <div id="map"
+        style="height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 1;">
+    </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Init Map centered on Valencia (aprox)
+        var map = L.map('map').setView([39.4699, -0.3763], 10);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Fetch Data
+        fetch('/dashboard/api/schools_geojson')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        var colorMap = {
+                            'green': '#2ecc71',
+                            'orange': '#f39c12',
+                            'red': '#e74c3c'
+                        };
+                        var color = colorMap[feature.properties.status] || '#3498db';
+
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: color,
+                            color: "#fff",
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties) {
+                            layer.bindPopup(`
+                                <strong>${feature.properties.name}</strong><br>
+                                <small>${feature.properties.code || 'Sin código'}</small><br>
+                                ${feature.properties.address}
+                            `);
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.error('Error loading map data:', error));
+    });
+</script>
+{% endblock %}

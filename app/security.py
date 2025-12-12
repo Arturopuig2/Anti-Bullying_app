@@ -9,7 +9,12 @@ from .database import get_db
 from .models import User
 
 # Configuración (En prod usar variables de entorno)
-SECRET_KEY = "esto_es_un_secreto_super_seguro_para_desarrollo"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback_insecure_key_for_dev_only_change_in_prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

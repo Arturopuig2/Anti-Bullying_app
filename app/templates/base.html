@@ -10,11 +10,39 @@
 
 <body>
     <header>
-        <div>
-            <!-- En una app real, mostraríamos Logout si está logueado -->
+        <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: -1px;">
+            <a href="/" style="color: white; text-decoration: none;">🛡️ Anti-Bullying App</a>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            {% if user %}
+            <div style="position: relative;">
+                <button onclick="toggleUserMenu()" class="user-menu-btn">
+                    👤 {{ user.full_name }} ▼
+                </button>
+                <div id="userDropdown" class="dropdown-content">
+                    <div class="user-info-item">
+                        Rol: <strong>{{ user.role.value }}</strong>
+                    </div>
+                    {% if user.role.value == 'teacher' or user.role.value == 'school_admin' %}
+                    <a href="/advice/teacher" class="dropdown-item">
+                        🤖 Asistente IA (Protocolo)
+                    </a>
+                    {% elif user.role.value == 'parent' %}
+                    <a href="/advice/parent" class="dropdown-item">
+                        🤖 Asistente IA (Familias)
+                    </a>
+                    {% endif %}
+                    <a href="/auth/logout" class="dropdown-item">
+                        🚪 Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+            {% else %}
             <a href="/auth/login" style="color: white; text-decoration: none; margin-right: 15px;">Iniciar Sesión</a>
             <a href="/auth/register"
                 style="background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Registrarse</a>
+            {% endif %}
         </div>
     </header>
     <main>
@@ -23,6 +51,25 @@
     <footer>
         <p>&copy; 2025 Proyecto Anti-Bullying</p>
     </footer>
+
+    <script>
+        function toggleUserMenu() {
+            document.getElementById("userDropdown").classList.toggle("show");
+        }
+
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function (event) {
+            if (!event.target.matches('.user-menu-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

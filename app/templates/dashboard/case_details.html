@@ -44,8 +44,12 @@
         </div>
     </section>
 
+    <script id="survey-data" type="application/json">
+        {{ survey.raw_answers | safe }}
+    </script>
+
     <script>
-        const rawAnswers = {{ survey.raw_answers | safe }};
+        const rawAnswers = JSON.parse(document.getElementById('survey-data').textContent);
         const container = document.getElementById('answers-container');
 
         // Mapeo simple de claves a textos legibles (Idealmente esto vendría del backend o config compartido)

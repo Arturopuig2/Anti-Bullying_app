@@ -6,16 +6,18 @@ from ..database import get_db
 from ..schemas import SurveyInput, RiskAnalysisResult
 from ..agents.predictor import heuristic_engine
 from ..models import SurveyResponse, AlertLevel, User, Student
+from ..security import get_current_user
 import json
 
 router = APIRouter(prefix="/surveys", tags=["surveys"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/parent", response_class=HTMLResponse)
-def get_parent_survey(request: Request):
-    return templates.TemplateResponse("forms/parent_survey.html", {"request": request})
-
-from ..security import get_current_user
+def get_parent_survey(request: Request, current_user: User = Depends(get_current_user)):
+    return templates.TemplateResponse("forms/parent_survey.html", {
+        "request": request,
+        "user": current_user
+    })
 
 from fastapi import BackgroundTasks
 from ..agents.incident_responder import incident_responder

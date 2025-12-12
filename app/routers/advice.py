@@ -2,16 +2,18 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from ..agents.rag_expert import rag_system
+from ..security import get_current_user, User
+from ..models import UserRole
 
 router = APIRouter(prefix="/advice", tags=["advice"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/chat", response_class=HTMLResponse)
-def chat_page(request: Request):
-    return templates.TemplateResponse("chat.html", {"request": request})
-
-from ..security import get_current_user, User
-from ..models import UserRole
+def chat_page(request: Request, current_user: User = Depends(get_current_user)):
+    return templates.TemplateResponse("chat.html", {
+        "request": request,
+        "user": current_user
+    })
 
 @router.get("/ask")
 def ask_expert(query: str, current_user: User = Depends(get_current_user)):

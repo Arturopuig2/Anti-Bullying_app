@@ -61,6 +61,7 @@ def register_user(
     password: str = Form(...),
     full_name: str = Form(...),
     role: str = Form(...),
+    center_code: str = Form(None),
     db: Session = Depends(get_db)
 ):
     from ..models import UserRole
@@ -84,11 +85,21 @@ def register_user(
             
         return templates.TemplateResponse("register.html", {"request": request, "error": error_msg})
 
-    # 3. Generar código si es profesor
+    # 3. Validation School Code (Si rol es teacher y código provisto)
+    school_id = None
+    if role == "teacher" and center_code:
+        from ..models import School
+        school = db.query(School).filter(School.center_code == center_code).first()
+        if not school:
+             return templates.TemplateResponse("register.html", {
+                 "request": request, "error": f"No se encontró ningún centro con el código '{center_code}'"
+             })
+        school_id = school.id
+
+    # 4. Generar código si es profesor (Personal)
     teacher_code = None
     if role == "teacher":
         import random, string
-        # Generar código tipo PROF-ABCD
         suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
         teacher_code = f"PROF-{suffix}"
 
@@ -99,7 +110,8 @@ def register_user(
         hashed_password=get_password_hash(password),
         full_name=full_name,
         role=user_role,
-        teacher_code=teacher_code 
+        teacher_code=teacher_code,
+        school_id=school_id 
     )
     db.add(new_user)
     db.commit()
@@ -193,5 +205,11 @@ def reset_password_action(
     
     response = RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
+
+@router.get("/logout")
+def logout():
+    response = RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("access_token")
     return response
 

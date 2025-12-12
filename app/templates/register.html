@@ -37,12 +37,33 @@
 
         <div style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Soy...</label>
-            <select name="role" required
+            <select name="role" required id="roleSelect" onchange="toggleTeacherFields()"
                 style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
                 <option value="parent">Padre / Madre / Tutor</option>
                 <option value="teacher">Profesor / Docente</option>
             </select>
         </div>
+
+        <div id="schoolCodeField" style="margin-bottom: 1rem; display: none;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Código del Centro (Opcional)</label>
+            <input type="text" name="center_code" placeholder="Ej: MAD-001"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px;">
+            <small style="color: #7f8c8d; font-size: 0.8rem;">Si trabajas en un colegio registrado, introduce su
+                código.</small>
+        </div>
+
+        <script>
+            function toggleTeacherFields() {
+                const role = document.getElementById('roleSelect').value;
+                const field = document.getElementById('schoolCodeField');
+                if (role === 'teacher') {
+                    field.style.display = 'block';
+                } else {
+                    field.style.display = 'none';
+                    field.querySelector('input').value = ''; // Limpiar si cambia a padre
+                }
+            }
+        </script>
 
         <button type="submit"
             style="width: 100%; padding: 0.8rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">

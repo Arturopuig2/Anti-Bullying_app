@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: anti-bullying-app
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the local database file to persist data
+      - ./bullying_app.db:/app/bullying_app.db
+      # Mount the documents folder if needed
+      - ./documents:/app/documents
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+    restart: unless-stopped

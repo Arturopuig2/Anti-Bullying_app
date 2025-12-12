@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean, Enum, Float
 from sqlalchemy.orm import relationship, DeclarativeBase
 from datetime import datetime
 import enum
@@ -25,8 +25,12 @@ class School(Base):
     __tablename__ = "schools"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+    center_code = Column(String, unique=True, index=True, nullable=True) # Código oficial del centro
     address = Column(String)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     contact_email = Column(String) # Email para alertas críticas del centro
+    phone = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     
     users = relationship("User", back_populates="school")

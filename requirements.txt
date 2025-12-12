@@ -13,3 +13,8 @@ httpx
 faiss-cpu
 pypdf
 python-docx
+pandas
+openpyxl
+xlrd
+faker
+python-dotenv

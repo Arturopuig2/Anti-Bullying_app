@@ -11,8 +11,13 @@
             <p style="color: #7f8c8d; margin-top: 0.5rem;">Vista general del estado emocional del aula</p>
         </div>
         <div>
-            <span style="background: #eef2f7; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500;">
-                Profesor: Demo User
+            <a href="/dashboard/map"
+                style="background: #3498db; color: white; padding: 0.5rem 1rem; border-radius: 20px; text-decoration: none; font-weight: 500; margin-right: 1rem;">
+                🗺️ Ver Mapa
+            </a>
+            <span
+                style="background: #eef2f7; color: #2c3e50; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 500;">
+                Profesor: {{ user.full_name }}
             </span>
         </div>
     </header>
@@ -28,6 +33,18 @@
                 teacher.teacher_code }}</p>
             <small style="opacity: 0.8; font-size: 0.8rem;">Compártelo con los padres</small>
         </div>
+
+        {% if teacher.school %}
+        <!-- Card 0.5: Mi Colegio -->
+        <div
+            style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0; font-size: 1rem; opacity: 0.9;">Mi Colegio</h3>
+            <p style="margin: 0.5rem 0 0 0; font-size: 1.4rem; font-weight: bold;">{{ teacher.school.center_code }}</p>
+            <small
+                style="opacity: 0.8; font-size: 0.8rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+                teacher.school.name }}</small>
+        </div>
+        {% endif %}
 
         <!-- Card 1 -->
         <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
