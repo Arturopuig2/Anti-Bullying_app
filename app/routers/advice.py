@@ -15,6 +15,19 @@ def chat_page(request: Request, current_user: User = Depends(get_current_user)):
         "user": current_user
     })
 
+@router.get("/teacher", response_class=HTMLResponse)
+def teacher_advice_page(request: Request, current_user: User = Depends(get_current_user)):
+    # Verify role (optional redundancy but good for security)
+    if current_user.role not in [UserRole.TEACHER, UserRole.SCHOOL_ADMIN]:
+        return templates.TemplateResponse("error.html", {"request": request, "error": "Acceso restringido"})
+    return templates.TemplateResponse("chat.html", {"request": request, "user": current_user, "mode": "Teacher"})
+
+@router.get("/parent", response_class=HTMLResponse)
+def parent_advice_page(request: Request, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.PARENT:
+         return templates.TemplateResponse("error.html", {"request": request, "error": "Acceso restringido"})
+    return templates.TemplateResponse("chat.html", {"request": request, "user": current_user, "mode": "Parent"})
+
 @router.get("/ask")
 def ask_expert(query: str, current_user: User = Depends(get_current_user)):
     """

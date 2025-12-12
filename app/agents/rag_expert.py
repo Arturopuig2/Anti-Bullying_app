@@ -18,11 +18,35 @@ class RagExpert:
         else:
             print("WARNING: RAG no inicializado. Falta OPENAI_API_KEY")
 
-    def refresh_knowledge_base(self):
-        """Carga documentos diferenciados por rol"""
+    def refresh_knowledge_base(self, force_rebuild: bool = False):
+        """
+        Carga documentos diferenciados por rol.
+        Si existe un índice persistido y no se fuerza rebuild, lo carga.
+        Si no, procesa docs y guarda el índice.
+        """
         for role in ["parents", "teachers"]:
             try:
                 role_dir = os.path.join(self.documents_dir, role)
+                index_path = os.path.join(self.documents_dir, f"{role}_index")
+
+                # 1. Intentar cargar desde disco
+                is_outdated = self._is_index_outdated(role_dir, index_path)
+                
+                if not force_rebuild and not is_outdated and os.path.exists(index_path):
+                    embeddings = OpenAIEmbeddings()
+                    self.vectorstores[role] = FAISS.load_local(
+                        index_path, 
+                        embeddings, 
+                        allow_dangerous_deserialization=True
+                    )
+                    self._build_chain(role)
+                    print(f"Loaded existing RAG index for {role} from {index_path}")
+                    continue
+                
+                if is_outdated:
+                    print(f"Detected new changes in {role}. Rebuilding index...")
+
+                # 2. Si no existe o forzamos o está desactualizado, construir de cero
                 if not os.path.exists(role_dir):
                     os.makedirs(role_dir)
                     print(f"Created directory: {role_dir}")
@@ -52,12 +76,40 @@ class RagExpert:
                 embeddings = OpenAIEmbeddings()
                 self.vectorstores[role] = FAISS.from_documents(splits, embeddings)
                 
+                # 3. Guardar en disco para la próxima
+                self.vectorstores[role].save_local(index_path)
+                print(f"Saved RAG index for {role} to {index_path}")
+                
                 # Construir cadena específica para este rol
                 self._build_chain(role)
                 print(f"RAG Knowledge Base for {role} refreshed with {len(splits)} chunks.")
                 
             except Exception as e:
                 print(f"Error initializing RAG for {role}: {e}")
+
+    def _is_index_outdated(self, role_dir: str, index_path: str) -> bool:
+        """Compara la fecha de modificación del index con los archivos de documentos"""
+        if not os.path.exists(index_path):
+            return True # No existe, debe crearse
+        
+        if not os.path.exists(role_dir):
+            return False # No hay docs, no hay nada que actualizar
+            
+        # Fecha de modificación del índice (asumimos la carpeta misma o index.faiss)
+        index_mtime = os.path.getmtime(index_path)
+        
+        # Buscar archivo más reciente en documentos
+        latest_doc_mtime = 0
+        for root, dirs, files in os.walk(role_dir):
+            for file in files:
+                if file.endswith(('.txt', '.pdf', '.docx')):
+                    file_path = os.path.join(root, file)
+                    mtime = os.path.getmtime(file_path)
+                    if mtime > latest_doc_mtime:
+                        latest_doc_mtime = mtime
+        
+        # Si el doc más reciente es posterior al índice, está desactualizado
+        return latest_doc_mtime > index_mtime
 
     def _build_chain(self, role):
         retriever = self.vectorstores[role].as_retriever(search_kwargs={"k": 2})

@@ -25,10 +25,16 @@
                         Rol: <strong>{{ user.role.value }}</strong>
                     </div>
                     {% if user.role.value == 'teacher' or user.role.value == 'school_admin' %}
+                    <a href="/dashboard/teacher" class="dropdown-item">
+                        🏠 Volver al Panel
+                    </a>
                     <a href="/advice/teacher" class="dropdown-item">
                         🤖 Asistente IA (Protocolo)
                     </a>
                     {% elif user.role.value == 'parent' %}
+                    <a href="/parents/dashboard" class="dropdown-item">
+                        🏠 Volver al Panel
+                    </a>
                     <a href="/advice/parent" class="dropdown-item">
                         🤖 Asistente IA (Familias)
                     </a>
