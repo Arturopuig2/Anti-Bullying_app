@@ -36,8 +36,22 @@ def submit_survey(
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    # 2. Análisis del Agente
-    analysis = heuristic_engine.analyze(survey_data)
+    # 2. Calcular Sentimiento del Profesor (Contexto)
+    teacher_sentiment = 0.0
+    if student.teacher_id:
+        from ..models import ClassObservation
+        from ..utils.text_analysis import calculate_atmosphere_score
+        
+        # Últimas 5 observaciones
+        observations = db.query(ClassObservation)\
+            .filter(ClassObservation.teacher_id == student.teacher_id)\
+            .order_by(ClassObservation.timestamp.desc())\
+            .limit(5).all()
+        
+        teacher_sentiment = calculate_atmosphere_score(observations)
+
+    # 3. Análisis del Agente
+    analysis = heuristic_engine.analyze(survey_data, teacher_sentiment)
     
     # 3. Persistencia en BD
     db_survey = SurveyResponse(
@@ -55,8 +69,11 @@ def submit_survey(
     
     # 4. Invocación al Agente de Respuesta (Si es necesario)
     if analysis.risk_level in ["high", "critical"] and student.teacher_id:
-        # Recuperar email del profesor (o usar dummy si no tiene)
-        teacher_email = "profesor_demo@colegio.com" # TODO: student.teacher.email
+        # Recuperar email del profesor
+        teacher_email = "profesor_demo@colegio.com"
+        if student.teacher and student.teacher.email:
+             teacher_email = student.teacher.email
+             
         background_tasks.add_task(
             incident_responder.handle_alert, 
             student, 

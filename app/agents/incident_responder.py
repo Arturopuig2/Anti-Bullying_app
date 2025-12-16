@@ -58,7 +58,21 @@ class IncidentResponder:
         return action_plan_email
 
     def _send_email(self, to_email: str, content: str):
-        # Aquí conectaríamos con SendGrid/SMTP real
+        # Enviar correo real usando utilidad SMTP
+        try:
+            from ..utils.email import send_email
+            # Extract basic subject or use default
+            subject = "🚨 ALERTA ANTIBULLYING: Acción Requerida"
+            
+            # Convierte saltos de linea a <br> para HTML básico si es texto plano
+            html_content = content.replace("\n", "<br>")
+            
+            send_email(to_email, subject, html_content)
+            
+        except Exception as e:
+            print(f"❌ Error enviando email SMTP: {e}")
+
+        # Log en terminal (solicitado por usuario)
         print(f"\n📨 [EMAIL SENT] To: {to_email}")
         print("---------------------------------------------------")
         print(content)

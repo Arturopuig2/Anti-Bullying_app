@@ -56,7 +56,7 @@
             <tbody>
                 {% for classroom in classrooms %}
                 <tr style="border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer;"
-                    onclick="window.location.href='/dashboard/school_admin/classroom/{{ classroom.name }}'">
+                    onclick="window.location.href='/dashboard/school_admin/classroom/{{ classroom.name }}{{ '?school_id=' ~ school.id if user.role.value == 'super_admin' else '' }}'">
                     <td style="padding: 1rem; font-weight: 600; color: #2c3e50;">
                         {{ classroom.name }}
                         {% if classroom.has_critical %}
@@ -88,7 +88,7 @@
                         {% endif %}
                     </td>
                     <td style="padding: 1rem;">
-                        <a href="/dashboard/school_admin/classroom/{{ classroom.name }}"
+                        <a href="/dashboard/school_admin/classroom/{{ classroom.name }}{{ '?school_id=' ~ school.id if user.role.value == 'super_admin' else '' }}"
                             style="color: #3498db; text-decoration: none; font-weight: 500;">
                             Ver Detalle &rarr;
                         </a>

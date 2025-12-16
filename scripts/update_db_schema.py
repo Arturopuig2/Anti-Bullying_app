@@ -17,7 +17,8 @@ def update_schema():
             "ALTER TABLE schools ADD COLUMN center_code VARCHAR",
             "ALTER TABLE schools ADD COLUMN latitude FLOAT",
             "ALTER TABLE schools ADD COLUMN longitude FLOAT",
-            "ALTER TABLE schools ADD COLUMN phone VARCHAR"
+            "ALTER TABLE schools ADD COLUMN phone VARCHAR",
+            "ALTER TABLE survey_responses ADD COLUMN expert_label VARCHAR"
         ]
         
         for stmt in statements:

@@ -103,6 +103,10 @@ class SurveyResponse(Base):
     risk_level = Column(Enum(AlertLevel))
     ai_summary = Column(Text) # Resumen generado por LangChain
     
+    # Feedback del Experto (Human-in-the-Loop)
+    # Valores: "false_positive", "false_negative", "real_case", null
+    expert_label = Column(String, nullable=True)
+
     student = relationship("Student", back_populates="surveys")
 
 class ChatMessage(Base):

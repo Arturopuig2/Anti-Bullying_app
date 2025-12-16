@@ -34,50 +34,160 @@
         var map = L.map('map').setView([39.4699, -0.3763], 10);
         var geoJsonLayer;
         var allFeatures = [];
+        var filterCheckboxes = []; // Store refs
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        // Custom Control for Search
+        // Custom Control for Search and Filtering
         var searchControl = L.Control.extend({
             options: { position: 'topright' },
             onAdd: function (map) {
                 var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
                 container.style.backgroundColor = 'white';
-                container.style.padding = '10px';
+                container.style.padding = '15px';
                 container.style.width = '300px';
+                container.style.borderRadius = '8px';
+                container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
 
+                // Search Input
                 var input = L.DomUtil.create('input', 'search-input', container);
                 input.type = 'text';
                 input.placeholder = '🔍 Buscar centro...';
                 input.style.width = '100%';
-                input.style.padding = '5px';
-                input.style.border = '1px solid #ccc';
+                input.style.padding = '8px';
+                input.style.marginBottom = '10px';
+                input.style.border = '1px solid #ddd';
                 input.style.borderRadius = '4px';
+                input.style.boxSizing = 'border-box';
 
+                // Input Event
                 input.onkeyup = function (e) {
-                    var val = e.target.value.toLowerCase();
-                    filterMarkers(val);
+                    filterMarkers();
                 }
 
-                // Prevent map interaction when typing
+                // Filters Container
+                var filtersDiv = L.DomUtil.create('div', '', container);
+                filtersDiv.style.display = 'flex';
+                filtersDiv.style.flexDirection = 'column';
+                filtersDiv.style.gap = '5px';
+
+                function createCheckbox(label, value, color) {
+                    var wrapper = document.createElement('label');
+                    wrapper.style.display = 'flex';
+                    wrapper.style.alignItems = 'center';
+                    wrapper.style.fontSize = '0.9rem';
+                    wrapper.style.cursor = 'pointer';
+                    wrapper.style.color = '#555';
+
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = value;
+                    cb.checked = true;
+                    cb.style.marginRight = '8px';
+                    cb.onchange = function () { filterMarkers(); };
+
+                    // Track it
+                    filterCheckboxes.push(cb);
+
+                    var dot = document.createElement('span');
+                    dot.style.width = '10px';
+                    dot.style.height = '10px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.backgroundColor = color;
+                    dot.style.marginRight = '5px';
+                    dot.style.display = 'inline-block';
+
+                    wrapper.appendChild(cb);
+                    wrapper.appendChild(dot);
+                    wrapper.appendChild(document.createTextNode(label));
+                    return { wrapper, cb };
+                }
+
+                // Create checkboxes
+                var cbGreen = createCheckbox('Riesgo Bajo/Nulo', 'green', '#2ecc71');
+                var cbOrange = createCheckbox('Riesgo Medio', 'orange', '#f39c12');
+                var cbRed = createCheckbox('Riesgo Alto/Crítico', 'red', '#e74c3c');
+
+                filtersDiv.appendChild(cbGreen.wrapper);
+                filtersDiv.appendChild(cbOrange.wrapper);
+                filtersDiv.appendChild(cbRed.wrapper);
+
                 L.DomEvent.disableClickPropagation(container);
                 return container;
             }
         });
-        map.addControl(new searchControl());
 
-        function filterMarkers(text) {
+        var ctrl = new searchControl();
+        map.addControl(ctrl);
+
+        // Custom Fullscreen Control
+        var fullscreenControl = L.Control.extend({
+            options: { position: 'bottomright' },
+            onAdd: function (map) {
+                var btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+                btn.innerHTML = '⛶';
+                btn.title = "Pantalla Completa";
+                btn.style.backgroundColor = 'white';
+                btn.style.width = '34px';
+                btn.style.height = '34px';
+                btn.style.cursor = 'pointer';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '4px';
+                btn.style.fontSize = '1.2rem';
+                btn.style.display = 'flex';
+                btn.style.alignItems = 'center';
+                btn.style.justifyContent = 'center';
+                btn.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+
+                btn.onclick = function () {
+                    var elem = document.getElementById('map');
+                    if (!document.fullscreenElement) {
+                        elem.requestFullscreen().catch(err => {
+                            alert(`Error al intentar pantalla completa: ${err.message}`);
+                        });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                };
+
+                return btn;
+            }
+        });
+        map.addControl(new fullscreenControl());
+
+
+        function filterMarkers() {
             if (!geoJsonLayer) return;
+
+            // Get text safely
+            var input = document.querySelector('.search-input');
+            var text = input ? input.value.toLowerCase() : "";
+
+            // Get checkbox states from array
+            var selectedStatuses = [];
+            filterCheckboxes.forEach(cb => {
+                if (cb.checked) selectedStatuses.push(cb.value);
+            });
+
+            // Fallback if empty (should imply none, but let's be safe if something broke)
+            // if (selectedStatuses.length === 0) ... (keep as None)
+
             geoJsonLayer.clearLayers();
 
             var filtered = allFeatures.filter(function (feature) {
-                if (!text) return true;
                 var props = feature.properties;
-                return (props.name && props.name.toLowerCase().includes(text)) ||
-                    (props.code && props.code.toLowerCase().includes(text));
+                var statusMatch = selectedStatuses.includes(props.status);
+                var textMatch = true;
+
+                if (text) {
+                    textMatch = (props.name && props.name.toLowerCase().includes(text)) ||
+                        (props.code && props.code.toLowerCase().includes(text));
+                }
+
+                return statusMatch && textMatch;
             });
 
             geoJsonLayer.addData(filtered);
@@ -112,13 +222,25 @@
                             layer.bindPopup(`
                                 <strong>${feature.properties.name}</strong><br>
                                 <small>${feature.properties.code || 'Sin código'}</small><br>
-                                ${feature.properties.address}
+                                ${feature.properties.address}<br>
+                                <div style="margin-top: 10px;">
+                                    <a href="/dashboard/super_admin/school/${feature.properties.id}" 
+                                       style="display: inline-block; padding: 5px 10px; background-color: #3498db; color: white; text-decoration: none; border-radius: 4px; font-size: 0.8rem;">
+                                       📄 Ver Informe
+                                    </a>
+                                </div>
                             `);
                         }
                     }
                 }).addTo(map);
+
+                // Ensure filter is applied initially (e.g. if we default filtered)
+                // Actually initial state is all checked, so loading all is consistent.
+                // But let's call it to be suer.
+                filterMarkers();
             })
             .catch(error => console.error('Error loading map data:', error));
     });
 </script>
 {% endblock %}
+```

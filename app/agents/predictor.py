@@ -16,11 +16,11 @@ class HeuristicPredictor:
     }
 
     # Umbrales
-    THRESHOLD_CRITICAL = 12 # Puntuación muy alta
+    threshold_CRITICAL = 12 # Puntuación muy alta
     THRESHOLD_HIGH = 8
     THRESHOLD_MEDIUM = 4
 
-    def analyze(self, data: SurveyInput) -> RiskAnalysisResult:
+    def analyze(self, data: SurveyInput, teacher_sentiment: float = 0.0) -> RiskAnalysisResult:
         score = 0
         flags = []
         
@@ -88,6 +88,16 @@ class HeuristicPredictor:
                 risk_level = AlertLevel.CRITICAL
             
             # Umbrales (Max 52)
+            # Umbrales (Max 52)
+            # Modificador: Si el ambiente escolar (Profesor) es negativo, bajamos los umbrales o subimos el score.
+            # teacher_sentiment va de 0.0 (Bien) a 1.0 (Mal)
+            
+            sentiment_boost = 0
+            if teacher_sentiment > 0.3:
+                sentiment_boost = int(teacher_sentiment * 10) # Max +10 puntos
+                score += sentiment_boost
+                flags.append(f"Ambiente de Clase Negativo (+{sentiment_boost})")
+
             elif score > 25: risk_level = AlertLevel.CRITICAL
             elif score > 15: risk_level = AlertLevel.HIGH
             elif score > 8: risk_level = AlertLevel.MEDIUM

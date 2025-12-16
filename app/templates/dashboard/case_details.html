@@ -66,61 +66,85 @@
             </div>
         </div>
 
-        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
-            <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.5rem;">Análisis de IA</h3>
-            <p style="color: #34495e; line-height: 1.6;">{{ survey.ai_summary }}</p>
+        <h3 style="color: #2c3e50; font-size: 1.1rem; margin-bottom: 0.5rem;">Análisis de IA (Cualitativo)</h3>
+        <p style="color: #34495e; line-height: 1.6;">{{ survey.ai_summary }}</p>
+</div>
+
+<div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed #eee;">
+    <h3
+        style="color: #e67e22; font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        🤖 Predicción ML (Cuantitativo)
+        <span
+            style="font-size: 0.8rem; background: #eee; padding: 0.2rem 0.5rem; border-radius: 4px; color: #555;">Beta</span>
+    </h3>
+    <div style="display: flex; gap: 2rem; align-items: center;">
+        <div>
+            <span style="font-size: 2rem; font-weight: bold; color: {{ '#e74c3c' if ml_prob > 50 else '#2ecc71' }};">
+                {{ ml_prob }}%
+            </span>
+            <span style="color: #7f8c8d; display: block; font-size: 0.9rem;">Probabilidad de Caso Real</span>
         </div>
-    </header>
-
-    <section style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <h2 style="color: #2c3e50; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f0f2f5;">
-            Respuestas del Cuestionario</h2>
-
-        <div id="answers-container">
-            <!-- Las respuestas se renderizarán vía JS porque están en JSON -->
-            Cargando respuestas...
+        <div style="flex: 1; border-left: 2px solid #f0f2f5; padding-left: 1.5rem;">
+            <p style="color: #34495e; margin: 0; line-height: 1.5; font-style: italic;">
+                "{{ ml_analysis }}"
+            </p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #95a5a6;">
+                * Explicabilidad generada por SHAP (XAI) basada en patrones históricos.
+            </p>
         </div>
-    </section>
+    </div>
+</div>
+</header>
 
-    <script id="survey-data" type="application/json">
+<section style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <h2 style="color: #2c3e50; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f0f2f5;">
+        Respuestas del Cuestionario</h2>
+
+    <div id="answers-container">
+        <!-- Las respuestas se renderizarán vía JS porque están en JSON -->
+        Cargando respuestas...
+    </div>
+</section>
+
+<script id="survey-data" type="application/json">
         {{ survey.raw_answers | safe }}
     </script>
 
-    <script>
-        const rawAnswers = JSON.parse(document.getElementById('survey-data').textContent);
-        const container = document.getElementById('answers-container');
+<script>
+    const rawAnswers = JSON.parse(document.getElementById('survey-data').textContent);
+    const container = document.getElementById('answers-container');
 
-        const labels = {
-            "p_item_1": "1. Ropa rota / material dañado",
-            "p_item_2": "2. Heridas o moratones",
-            "p_item_3": "3. Insultos o motes",
-            "p_item_4": "4. Exclusión social",
-            "p_item_5": "5. Coacción o amenazas",
-            "p_item_6": "6. Ansiedad al ir al colegio",
-            "p_item_7": "7. Dolores de cabeza/estómago",
-            "p_item_8": "8. Cambios de sueño/alimentación",
-            "p_item_9": "9. Cambios de humor",
-            "p_item_10": "10. Evitación del tema escolar",
-            "p_item_11": "11. Nerviosismo con móvil/tablet",
-            "p_item_12": "12. Ocultar pantalla",
-            "p_item_13": "13. Ciberacoso evidencia",
-            "p_observations": "Observaciones Familia"
-        };
+    const labels = {
+        "p_item_1": "1. Ropa rota / material dañado",
+        "p_item_2": "2. Heridas o moratones",
+        "p_item_3": "3. Insultos o motes",
+        "p_item_4": "4. Exclusión social",
+        "p_item_5": "5. Coacción o amenazas",
+        "p_item_6": "6. Ansiedad al ir al colegio",
+        "p_item_7": "7. Dolores de cabeza/estómago",
+        "p_item_8": "8. Cambios de sueño/alimentación",
+        "p_item_9": "9. Cambios de humor",
+        "p_item_10": "10. Evitación del tema escolar",
+        "p_item_11": "11. Nerviosismo con móvil/tablet",
+        "p_item_12": "12. Ocultar pantalla",
+        "p_item_13": "13. Ciberacoso evidencia",
+        "p_observations": "Observaciones Familia"
+    };
 
-        let html = '<dl style="display: grid; grid-template-columns: 1fr; gap: 1rem;">';
+    let html = '<dl style="display: grid; grid-template-columns: 1fr; gap: 1rem;">';
 
-        for (const [key, value] of Object.entries(rawAnswers)) {
-            const label = labels[key] || key;
-            html += `
+    for (const [key, value] of Object.entries(rawAnswers)) {
+        const label = labels[key] || key;
+        html += `
                 <div style="padding: 1rem; background: #f8f9fa; border-radius: 8px;">
                     <dt style="font-weight: 600; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 0.5rem;">${label}</dt>
                     <dd style="margin: 0; color: #2c3e50; font-weight: 500;">${value}</dd>
                 </div>
             `;
-        }
-        html += '</dl>';
-        container.innerHTML = html;
-    </script>
+    }
+    html += '</dl>';
+    container.innerHTML = html;
+</script>
 </div>
 </div>
 
@@ -180,6 +204,9 @@
         const email = document.getElementById("expertEmail").value;
         const surveyId = modal.getAttribute('data-survey-id');
 
+        // Get selected classification
+        const classification = document.querySelector('input[name="case_classification"]:checked')?.value;
+
         // Disable button
         submitBtn.disabled = true;
         submitBtn.innerText = "Enviando...";
@@ -190,7 +217,10 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email: email })
+                body: JSON.stringify({
+                    email: email,
+                    classification: classification // Send selected label (or undefined)
+                })
             });
 
             if (response.ok) {

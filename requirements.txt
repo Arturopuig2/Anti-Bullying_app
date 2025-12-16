@@ -19,3 +19,6 @@ xlrd
 faker
 python-dotenv
 docx2txt
+scikit-learn
+shap
+joblib
