@@ -128,3 +128,15 @@ class ClassObservation(Base):
     teacher_id = Column(Integer, ForeignKey("users.id"))
     content = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    action = Column(String, index=True) # e.g. "VIEW_CASE", "LOGIN_FAIL"
+    target_id = Column(String, nullable=True) # e.g. "Student-123"
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    ip_address = Column(String, nullable=True)
+    details = Column(String, nullable=True)
+
+    user = relationship("User")

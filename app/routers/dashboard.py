@@ -228,6 +228,20 @@ def view_case_details(request: Request, survey_id: int, current_user: User = Dep
         print(f"ML Error: {e}")
         ml_analysis = f"Error generating analysis: {e}"
 
+    # --- AUDIT LOG ---
+    from ..models import AuditLog
+    client_ip = request.client.host if request.client else "unknown"
+    log_entry = AuditLog(
+        user_id=current_user.id,
+        action="VIEW_CASE_DETAILS",
+        target_id=str(survey_id),
+        ip_address=client_ip,
+        details=f"Viewed case for student {survey.student.internal_code}"
+    )
+    db.add(log_entry)
+    db.commit()
+    # -----------------
+
     return templates.TemplateResponse("dashboard/case_details.html", {
         "request": request, 
         "user": current_user,

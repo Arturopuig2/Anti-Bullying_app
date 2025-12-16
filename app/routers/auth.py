@@ -7,6 +7,8 @@ from datetime import timedelta
 from ..database import get_db
 from ..models import User
 from ..security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
+from ..limiter import limiter
+import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 templates = Jinja2Templates(directory="app/templates")
@@ -16,6 +18,7 @@ def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/login")
+@limiter.limit("5/minute")
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -37,7 +40,6 @@ async def login_for_access_token(
     )
     
     # Lógica de Redirección según Rol
-    # Lógica de Redirección según Rol
     redirect_url = "/parents/dashboard"
     if user.role.value == "teacher":
         redirect_url = "/dashboard/teacher"
@@ -46,15 +48,20 @@ async def login_for_access_token(
     elif user.role.value == "super_admin":
         redirect_url = "/dashboard/super_admin"
 
+    # HTTPS Secure Cookie Logic
+    is_production = os.getenv("ENVIRONMENT") == "production"
+    cookie_secure = True if is_production else False
+    cookie_samesite = "lax" if is_production else "lax" # Lax is usually fine for both, maybe 'strict' in prod
+
     # Si la solicitud espera HTML (Browser Submit)
     if "text/html" in request.headers.get("accept", ""):
         response = RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(key="access_token", value=access_token, httponly=True)
+        response.set_cookie(key="access_token", value=access_token, httponly=True, secure=cookie_secure, samesite=cookie_samesite)
         return response
 
     # Respuesta JSON para SPA/Mobile
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer", "redirect_url": redirect_url})
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=cookie_secure, samesite=cookie_samesite)
     return response
 
 @router.get("/register", response_class=HTMLResponse)

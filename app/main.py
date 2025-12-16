@@ -4,6 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from .database import init_db
 from dotenv import load_dotenv
 
+# Rate Limiting
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from .limiter import limiter
+
 # Cargar variables de entorno del .env
 load_dotenv(override=True)
 
@@ -11,6 +16,10 @@ load_dotenv(override=True)
 init_db()
 
 app = FastAPI(title="Anti-Bullying Platform", version="1.0.0")
+
+# Register Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Montar estáticos
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
