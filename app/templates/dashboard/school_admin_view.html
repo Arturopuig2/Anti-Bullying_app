@@ -40,25 +40,42 @@
     </div>
 
     <!-- Tabla de Aulas -->
-    <h2 style="color: #2c3e50; margin-bottom: 1rem;">Aulas</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="color: #2c3e50; margin: 0;">Aulas</h2>
+        <div style="display: flex; gap: 10px;">
+            <select id="filter-status" onchange="filterClassrooms()"
+                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+                <option value="">Todos los Estados</option>
+                <option value="CRÍTICO">🔴 Crítico</option>
+                <option value="PRECAUCIÓN">🟠 Precaución</option>
+                <option value="SALUDABLE">🟢 Saludable</option>
+            </select>
+            <input type="text" id="classroomSearch" onkeyup="filterClassrooms()" placeholder="🔍 Buscar aula..."
+                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+    </div>
 
     <div style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse;">
+        <table id="classroomsTable" style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr style="background: #f8f9fa; text-align: left;">
-                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d;">Código Aula</th>
-                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d;">Alumnos / as</th>
-                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d;">Alertas</th>
+                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d; cursor: pointer;"
+                        onclick="sortTable(0, 'text')">Código Aula ↕️</th>
+                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d; cursor: pointer;"
+                        onclick="sortTable(1, 'number')">Alumnos / as ↕️</th>
+                    <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d; cursor: pointer;"
+                        onclick="sortTable(2, 'number')">Alertas ↕️</th>
                     <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d;">Estado Salud</th>
                     <th style="padding: 1rem; border-bottom: 2px solid #eee; color: #7f8c8d;">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for classroom in classrooms %}
-                <tr style="border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer;"
+                <tr class="classroom-row"
+                    style="border-bottom: 1px solid #eee; transition: background 0.2s; cursor: pointer;"
                     onclick="window.location.href='/dashboard/school_admin/classroom/{{ classroom.name }}{{ '?school_id=' ~ school.id if user.role.value == 'super_admin' else '' }}'">
                     <td style="padding: 1rem; font-weight: 600; color: #2c3e50;">
-                        {{ classroom.name }}
+                        <span class="classroom-name">{{ classroom.name }}</span>
                         {% if classroom.has_critical %}
                         <span
                             style="display: inline-block; width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%; margin-left: 5px; vertical-align: middle;"
@@ -79,13 +96,15 @@
                         {% endif %}
                     </td>
                     <td style="padding: 1rem;">
-                        {% if classroom.status == 'red' %}
-                        <span style="color: #c0392b; font-weight: bold;">🔴 Crítico</span>
-                        {% elif classroom.status == 'orange' %}
-                        <span style="color: #d35400; font-weight: bold;">🟠 Precaución</span>
-                        {% else %}
-                        <span style="color: #27ae60; font-weight: bold;">🟢 Saludable</span>
-                        {% endif %}
+                        <span class="status-text">
+                            {% if classroom.status == 'red' %}
+                            <span style="color: #c0392b; font-weight: bold;">🔴 Crítico</span>
+                            {% elif classroom.status == 'orange' %}
+                            <span style="color: #d35400; font-weight: bold;">🟠 Precaución</span>
+                            {% else %}
+                            <span style="color: #27ae60; font-weight: bold;">🟢 Saludable</span>
+                            {% endif %}
+                        </span>
                     </td>
                     <td style="padding: 1rem;">
                         <a href="/dashboard/school_admin/classroom/{{ classroom.name }}{{ '?school_id=' ~ school.id if user.role.value == 'super_admin' else '' }}"
@@ -99,4 +118,70 @@
         </table>
     </div>
 </div>
+
+<script>
+    function filterClassrooms() {
+        const searchInput = document.getElementById('classroomSearch').value.toUpperCase();
+        const statusFilter = document.getElementById('filter-status').value.toUpperCase();
+
+        const rows = document.getElementsByClassName("classroom-row");
+
+        for (let i = 0; i < rows.length; i++) {
+            const name = rows[i].querySelector(".classroom-name").textContent.toUpperCase();
+            const statusText = rows[i].querySelector(".status-text").textContent.toUpperCase();
+
+            let visible = true;
+
+            if (searchInput && name.indexOf(searchInput) === -1) {
+                visible = false;
+            }
+
+            if (statusFilter && statusText.indexOf(statusFilter) === -1) {
+                visible = false;
+            }
+
+            rows[i].style.display = visible ? "" : "none";
+        }
+    }
+
+    let sortDir = {};
+    function sortTable(n, type) {
+        let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("classroomsTable");
+        switching = true;
+
+        dir = sortDir[n] === "asc" ? "desc" : "asc";
+        sortDir[n] = dir;
+
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                let xVal = x.textContent.trim();
+                let yVal = y.textContent.trim();
+
+                if (type === 'number') {
+                    // Extract just the number (e.g. "5 activas" -> 5)
+                    xVal = parseInt(xVal) || 0;
+                    yVal = parseInt(yVal) || 0;
+                }
+
+                if (dir == "asc") {
+                    if (xVal > yVal) { shouldSwitch = true; break; }
+                } else if (dir == "desc") {
+                    if (xVal < yVal) { shouldSwitch = true; break; }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            }
+        }
+    }
+</script>
 {% endblock %}

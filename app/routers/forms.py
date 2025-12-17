@@ -57,7 +57,7 @@ def submit_survey(
     db_survey = SurveyResponse(
         submitted_by_id=user_id,
         student_id=student_id,
-        raw_answers=survey_data.model_dump_json(),
+        raw_answers=survey_data.model_dump_json(exclude_none=True),
         calculated_risk_score=analysis.total_score,
         risk_level=AlertLevel(analysis.risk_level), # Convertir string a Enum
         ai_summary=analysis.recommendation

@@ -100,22 +100,67 @@
 
     <!-- Actividad Reciente Tabla -->
     <section>
-        <h2 style="font-size: 1.4rem; color: #2c3e50; margin-bottom: 1rem;">Actividad Reciente</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.4rem; color: #2c3e50; margin: 0;">Actividad Reciente</h2>
+            <input type="text" id="globalSearch" onkeyup="filterGlobal()" placeholder="🔍 Buscar..."
+                style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+        </div>
+
         <div style="background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;">
+            <table id="teacherTable" style="width: 100%; border-collapse: collapse;">
                 <thead style="background: #f8f9fa;">
                     <tr>
-                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Fecha</th>
-                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Alumno</th>
-                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Nivel Riesgo</th>
-                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Score</th>
+                        <!-- Fecha: Ordenar -->
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600; cursor: pointer;"
+                            onclick="sortTable(0, 'date')">
+                            Fecha <span id="sort-0">↕️</span>
+                        </th>
+
+                        <!-- Alumno: Filtro + Orden -->
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <span style="cursor: pointer;" onclick="sortTable(1, 'text')">Alumno <span
+                                        id="sort-1">↕️</span></span>
+                                <select id="filter-student" onchange="filterTable()"
+                                    style="padding: 2px; font-size: 0.8rem;">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                        </th>
+
+                        <!-- Nivel Riesgo: Filtro + Orden -->
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <span style="cursor: pointer;" onclick="sortTable(2, 'risk')">Riesgo <span
+                                        id="sort-2">↕️</span></span>
+                                <select id="filter-risk" onchange="filterTable()"
+                                    style="padding: 2px; font-size: 0.8rem;">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                        </th>
+
+                        <!-- Score: Filtro + Orden -->
+                        <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <span style="cursor: pointer;" onclick="sortTable(3, 'number')">Score <span
+                                        id="sort-3">↕️</span></span>
+                                <select id="filter-score" onchange="filterTable()"
+                                    style="padding: 2px; font-size: 0.8rem;">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                        </th>
+
                         <th style="padding: 1rem; text-align: left; color: #6c757d; font-weight: 600;">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in activity %}
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 1rem;">{{ item.date_submitted.strftime('%d/%m %H:%M') }}</td>
+                    <tr class="data-row" style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 1rem;" data-sort="{{ item.date_submitted.isoformat() }}">
+                            {{ item.date_submitted.strftime('%d/%m %H:%M') }}
+                        </td>
                         <td style="padding: 1rem; font-weight: 500;">
                             {{ item.student.name if item.student.name else item.student.internal_code }}
                         </td>
@@ -144,6 +189,194 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination Controls -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+            <div style="color: #7f8c8d; font-size: 0.9rem;">
+                Mostrando <span id="startRange">0</span>-<span id="endRange">0</span> de <span id="totalRows">0</span>
+                registros
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="changePage(-1)" id="prevBtn"
+                    style="padding: 0.5rem 1rem; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">Anterior</button>
+                <span id="pageIndicator"
+                    style="display: flex; align-items: center; padding: 0 10px; font-weight: 600; color: #2c3e50;">Página
+                    1</span>
+                <button onclick="changePage(1)" id="nextBtn"
+                    style="padding: 0.5rem 1rem; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;">Siguiente</button>
+            </div>
+        </div>
     </section>
 </div>
+
+<script>
+    let currentPage = 1;
+    const rowsPerPage = 20;
+    let filteredRows = []; // Stores the actual rows (DOM elements) that match the filters
+
+    document.addEventListener('DOMContentLoaded', function () {
+        populateFilters(1, 'filter-student');
+        populateFilters(2, 'filter-risk');
+        populateFilters(3, 'filter-score');
+
+        // Initial setup: all rows are "filtered" (visible)
+        const table = document.getElementById("teacherTable");
+        const tbody = table.querySelector("tbody");
+        const allRows = Array.from(tbody.getElementsByClassName("data-row"));
+
+        // Save references in a custom property on the row if needed, or just use array
+        // But logic is: Filter -> Update filteredRows -> Paginate -> Show/Hide
+
+        // Initial run
+        applyFilters();
+    });
+
+    function populateFilters(colIndex, selectId) {
+        const table = document.getElementById("teacherTable");
+        const rows = table.getElementsByClassName("data-row");
+        const select = document.getElementById(selectId);
+        const uniqueValues = new Set();
+
+        for (let i = 0; i < rows.length; i++) {
+            let cell = rows[i].getElementsByTagName("td")[colIndex];
+            if (cell) {
+                uniqueValues.add(cell.textContent.trim());
+            }
+        }
+
+        const sortedValues = Array.from(uniqueValues).sort();
+        sortedValues.forEach(val => {
+            const option = document.createElement("option");
+            option.value = val;
+            option.text = val;
+            select.appendChild(option);
+        });
+    }
+
+    // Called when selects change or search input changes
+    function filterTable() {
+        currentPage = 1; // Reset to page 1 on filter change
+        applyFilters();
+    }
+
+    function filterGlobal() {
+        currentPage = 1;
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const studentFilter = document.getElementById('filter-student').value.toUpperCase();
+        const riskFilter = document.getElementById('filter-risk').value.toUpperCase();
+        const scoreFilter = document.getElementById('filter-score').value.toUpperCase();
+        const globalFilter = document.getElementById('globalSearch').value.toUpperCase();
+
+        const table = document.getElementById("teacherTable");
+        const allRows = Array.from(table.getElementsByClassName("data-row"));
+
+        // 1. Determine which rows match
+        filteredRows = allRows.filter(row => {
+            const studentText = row.getElementsByTagName("td")[1].textContent.trim().toUpperCase();
+            const riskText = row.getElementsByTagName("td")[2].textContent.trim().toUpperCase();
+            const scoreText = row.getElementsByTagName("td")[3].textContent.trim().toUpperCase();
+
+            let matches = true;
+            if (studentFilter && studentText !== studentFilter) matches = false;
+            if (riskFilter && riskText !== riskFilter) matches = false;
+            if (scoreFilter && scoreText !== scoreFilter) matches = false;
+
+            if (globalFilter && studentText.indexOf(globalFilter) === -1) matches = false;
+
+            return matches;
+        });
+
+        // 2. Render current page
+        renderPage();
+    }
+
+    function renderPage() {
+        const total = filteredRows.length;
+        const totalPages = Math.ceil(total / rowsPerPage) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // Hide ALL rows first (simplest approach, or toggle display)
+        const table = document.getElementById("teacherTable");
+        const allRows = table.getElementsByClassName("data-row");
+        for (let row of allRows) {
+            row.style.display = "none";
+        }
+
+        // Calculate slice
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, total);
+
+        // Show only rows in slice
+        for (let i = startIndex; i < endIndex; i++) {
+            filteredRows[i].style.display = "";
+        }
+
+        // Update UI info
+        document.getElementById("startRange").textContent = total > 0 ? startIndex + 1 : 0;
+        document.getElementById("endRange").textContent = endIndex;
+        document.getElementById("totalRows").textContent = total;
+        document.getElementById("pageIndicator").textContent = "Página " + currentPage + " de " + totalPages;
+
+        // Button states
+        document.getElementById("prevBtn").disabled = (currentPage === 1);
+        document.getElementById("prevBtn").style.opacity = (currentPage === 1) ? "0.5" : "1";
+
+        document.getElementById("nextBtn").disabled = (currentPage === totalPages);
+        document.getElementById("nextBtn").style.opacity = (currentPage === totalPages) ? "0.5" : "1";
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        renderPage();
+    }
+
+    // Sort logic needs to re-apply filter/sort to filteredRows? 
+    // Ideally sorting rearranges the DOM nodes, so applyFilters() will pick them up in new order?
+    // Let's modify sortTable to just sort DOM nodes and refilter.
+
+    let sortDirections = {};
+    function sortTable(n, type) {
+        const table = document.getElementById("teacherTable");
+        const tbody = table.querySelector("tbody");
+        let rows = Array.from(tbody.getElementsByClassName("data-row"));
+
+        let dir = sortDirections[n] === "asc" ? "desc" : "asc";
+        sortDirections[n] = dir;
+
+        document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '↕️');
+        document.getElementById('sort-' + n).textContent = dir === 'asc' ? '↑' : '↓';
+
+        rows.sort((a, b) => {
+            let x = a.getElementsByTagName("TD")[n].textContent.trim();
+            let y = b.getElementsByTagName("TD")[n].textContent.trim();
+
+            if (type === 'date') {
+                x = a.getElementsByTagName("TD")[n].getAttribute('data-sort') || x;
+                y = b.getElementsByTagName("TD")[n].getAttribute('data-sort') || y;
+            }
+            if (type === 'number') {
+                x = parseFloat(x) || 0;
+                y = parseFloat(y) || 0;
+            } else {
+                x = x.toLowerCase();
+                y = y.toLowerCase();
+            }
+
+            if (x < y) return dir === 'asc' ? -1 : 1;
+            if (x > y) return dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        // Re-append rows in new order
+        rows.forEach(row => tbody.appendChild(row));
+
+        // Re-apply filters/pagination to reflect order
+        applyFilters();
+    }
+</script>
 {% endblock %}

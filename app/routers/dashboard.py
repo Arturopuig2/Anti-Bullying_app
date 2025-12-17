@@ -32,7 +32,7 @@ def teacher_dashboard(request: Request, current_user: User = Depends(get_current
     # 3. Datos para la tabla principal (Últimas encuestas) DE SUS ALUMNOS
     recent_activity = db.query(SurveyResponse).join(Student).filter(
         Student.teacher_id == teacher.id
-    ).order_by(desc(SurveyResponse.date_submitted)).limit(20).all()
+    ).order_by(desc(SurveyResponse.date_submitted)).all()
     
     # 4. Calcular Estadísticas Reales
     # Porcentaje de encuestas "Saludables" (LOW Risk) recientes

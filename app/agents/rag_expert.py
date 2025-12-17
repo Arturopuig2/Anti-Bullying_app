@@ -95,8 +95,14 @@ class RagExpert:
         if not os.path.exists(role_dir):
             return False # No hay docs, no hay nada que actualizar
             
-        # Fecha de modificación del índice (asumimos la carpeta misma o index.faiss)
-        index_mtime = os.path.getmtime(index_path)
+        # Fecha de modificación del índice REAL (archivo index.faiss)
+        # Si comprobamos la carpeta, Windows a veces no actualiza la fecha al modificar archivos dentro
+        real_index_file = os.path.join(index_path, "index.faiss")
+        if os.path.exists(real_index_file):
+            index_mtime = os.path.getmtime(real_index_file)
+        else:
+            # Fallback por si acaso es otro formato o no existe el archivo esperado
+            index_mtime = os.path.getmtime(index_path)
         
         # Buscar archivo más reciente en documentos
         latest_doc_mtime = 0

@@ -98,7 +98,8 @@ class HeuristicPredictor:
                 score += sentiment_boost
                 flags.append(f"Ambiente de Clase Negativo (+{sentiment_boost})")
 
-            elif score > 25: risk_level = AlertLevel.CRITICAL
+            # Evaluar nivel de riesgo final
+            if score > 25: risk_level = AlertLevel.CRITICAL
             elif score > 15: risk_level = AlertLevel.HIGH
             elif score > 8: risk_level = AlertLevel.MEDIUM
             else: risk_level = AlertLevel.LOW
