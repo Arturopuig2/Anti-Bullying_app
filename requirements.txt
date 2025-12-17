@@ -16,3 +16,4 @@ slowapi
 langchain
 langchain-openai
 langchain-community
+faiss-cpu
