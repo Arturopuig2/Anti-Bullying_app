@@ -81,3 +81,42 @@ def ask_expert(
     db.commit()
 
     return {"response": response_text, "role_used": rag_role}
+
+@router.get("/debug", tags=["debug"])
+def check_rag_status(current_user: User = Depends(get_current_user)):
+    """
+    Endpoint de diagnóstico para revisar el estado del RAG en producción.
+    Solo accesible por Admin/Técnicos.
+    """
+    if current_user.role not in [UserRole.SUPER_ADMIN, UserRole.SCHOOL_ADMIN]:
+         raise HTTPException(status_code=403, detail="Requiere privilegios de administración")
+
+    import os
+    
+    api_key = os.environ.get("OPENAI_API_KEY")
+    masked_key = f"{api_key[:5]}...{api_key[-4:]}" if api_key else "MISSING"
+    
+    docs_status = {}
+    for role in ["parents", "teachers"]:
+        dir_path = f"./documents/{role}"
+        files = []
+        if os.path.exists(dir_path):
+            files = os.listdir(dir_path)
+            
+        docs_status[role] = {
+            "path_exists": os.path.exists(dir_path),
+            "file_count": len(files),
+            "files": files,
+            "chain_active": rag_system.chains.get(role) is not None
+        }
+
+    return {
+        "openai_api_key_status": "PRESENT" if api_key else "MISSING",
+        "openai_api_key_preview": masked_key,
+        "rag_chains_status": {
+            "parents": "ACTIVE" if rag_system.chains.get("parents") else "INACTIVE",
+            "teachers": "ACTIVE" if rag_system.chains.get("teachers") else "INACTIVE"
+        },
+        "file_system_check": docs_status,
+        "current_working_directory": os.getcwd()
+    }
